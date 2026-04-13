@@ -1,5 +1,6 @@
 ```markdown
 # KryptonShield
+[**简体中文**](https://github.com/1432447293/KryptonShield/edit/main/README_CN.md) | **English**
 
 > A Personal Data Fortress for the Supercomputing Era — Brute-Force Resistant Encryption Powered by Argon2 + AES-256-GCM
 
