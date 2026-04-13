@@ -105,12 +105,12 @@ pip install argon2-cffi pycryptodome
 
 ### 下载源码
 
-将 `KryptonShield_gui.py` 下载到本地，或直接复制代码保存。
+将 `secure_encrypt_CN.py` 下载到本地，或直接复制代码保存。
 
 ### 运行程序
 
 ```bash
-python KryptonShield_gui.py
+python secure_encrypt_CN.py
 ```
 
 运行后将显示交互式菜单：
@@ -179,7 +179,7 @@ python KryptonShield_gui.py
 
 ## ⚙️ 高级配置
 
-有特定安全需求的用户可以直接修改 `KryptonShield_gui.py` 开头的参数：
+有特定安全需求的用户可以直接修改 `secure_encrypt_CN.py` 开头的参数：
 
 ```python
 # --- 配置参数（可根据安全需求调整） ---
