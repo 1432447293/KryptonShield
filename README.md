@@ -1,11 +1,35 @@
-```markdown
-# KryptonShield
-[**简体中文**](https://github.com/1432447293/KryptonShield/edit/main/README_CN.md) | **English**
+
+# 🔰 KryptonShield
+
+[**简体中文**](./README_CN.md) | **English**
 
 > A Personal Data Fortress for the Supercomputing Era — Brute-Force Resistant Encryption Powered by Argon2 + AES-256-GCM
 
-[![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.7+-blue.svg" alt="Python Version">
+  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
+  <img src="https://img.shields.io/badge/Version-2.0-orange.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg" alt="Platform">
+</p>
+
+---
+
+## 📑 Table of Contents
+
+- [📖 Introduction](#-introduction)
+- [✨ Core Features](#-core-features)
+- [🔧 Technical Principles](#-technical-principles)
+  - [1. Key Derivation — Argon2id](#1-key-derivation--argon2id)
+  - [2. Symmetric Encryption — AES-256-GCM](#2-symmetric-encryption--aes-256-gcm)
+  - [3. Encrypted Data Structure](#3-encrypted-data-structure)
+- [🚀 Quick Start](#-quick-start)
+- [📚 Usage Examples](#-usage-examples)
+- [⚙️ Advanced Configuration](#️-advanced-configuration)
+- [🛡️ Security Considerations & Disclaimer](#️-security-considerations--disclaimer)
+- [📄 Open Source License](#-open-source-license)
+- [🤝 Contributing & Feedback](#-contributing--feedback)
+
+---
 
 ## 📖 Introduction
 
@@ -13,13 +37,17 @@
 
 Unlike standard ZIP encryption or simple AES implementations, KryptonShield employs the **memory-hard key derivation function Argon2id**. By mandating substantial memory and computational resources for each decryption attempt, it renders large-scale parallel password guessing economically and technically prohibitive for adversaries using low-cost hardware.
 
-### ✨ Core Features
+---
 
-- 🔐 **Military-Grade Encryption**: Utilizes AES-256-GCM authenticated encryption, ensuring confidentiality, integrity, and tamper-resistance simultaneously.
-- 🧠 **Memory-Hard Brute-Force Resistance**: Key derivation leverages the Argon2id algorithm with a default memory cost of 512 MiB, effectively neutralizing attacks from GPU/ASIC/FPGA cracking farms.
-- 📁 **One-Click Folder Encryption**: Automatically archives entire directories into ZIP format before encryption, and intelligently restores the folder structure upon decryption.
-- 🌐 **Completely Offline**: No network dependencies, no data collection, and no backdoors. The password is the sole credential.
-- ⚙️ **Tunable Security Parameters**: Advanced users can adjust Argon2 time and memory costs to balance security requirements with system performance.
+## ✨ Core Features
+
+| Feature | Description |
+|---------|-------------|
+| 🔐 **Military-Grade Encryption** | Utilizes AES-256-GCM authenticated encryption, ensuring confidentiality, integrity, and tamper-resistance simultaneously. |
+| 🧠 **Memory-Hard Brute-Force Resistance** | Key derivation leverages the Argon2id algorithm with a default memory cost of 512 MiB, effectively neutralizing attacks from GPU/ASIC/FPGA cracking farms. |
+| 📁 **One-Click Folder Encryption** | Automatically archives entire directories into ZIP format before encryption, and intelligently restores the folder structure upon decryption. |
+| 🌐 **Completely Offline** | No network dependencies, no data collection, and no backdoors. The password is the sole credential. |
+| ⚙️ **Tunable Security Parameters** | Advanced users can adjust Argon2 time and memory costs to balance security requirements with system performance. |
 
 ---
 
@@ -30,6 +58,7 @@ Unlike standard ZIP encryption or simple AES implementations, KryptonShield empl
 Argon2 is the winner of the 2015 Password Hashing Competition (PHC) and is widely recognized as the state-of-the-art password hashing / key derivation function. This tool utilizes the **Argon2id** variant, which combines resistance against side-channel attacks and time-memory trade-off (TMTO) attacks.
 
 **Default Parameters:**
+
 | Parameter | Value | Description |
 |-----------|-------|-------------|
 | Time Cost | 4 | Number of iterations, controlling computational load |
@@ -47,12 +76,12 @@ Argon2 is the winner of the 2015 Password Hashing Competition (PHC) and is widel
 
 The internal binary layout of every encrypted file (`.enc` / `.zip.enc`) is as follows:
 
-
+```
 +----------------+----------------+----------------+----------------------+
 |      Salt      |     Nonce      |      Tag       |      Ciphertext      |
 |   (16 bytes)   |   (12 bytes)   |   (16 bytes)   |      (Variable)      |
 +----------------+----------------+----------------+----------------------+
-
+```
 
 - **Salt**: Random salt used for Argon2 key derivation.
 - **Nonce**: Initialization vector for AES-GCM, randomly generated per encryption.
@@ -201,10 +230,11 @@ This project is licensed under the [MIT License](LICENSE). You are free to use, 
 
 For questions, suggestions, or security vulnerability reports, please contact:
 
-- Submit a GitHub Issue
+- Submit a [GitHub Issue](https://github.com/1432447293/KryptonShield/issues)
 - Email `security@example.com` (PGP encryption preferred)
 
 ---
 
-*— KryptonShield: Forging a cryptographic barrier that even supercomputers struggle to breach.*
-```
+<p align="center">
+  <i>— KryptonShield: Forging a cryptographic barrier that even supercomputers struggle to breach. —</i>
+</p>
