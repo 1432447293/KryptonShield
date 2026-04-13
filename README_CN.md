@@ -1,6 +1,8 @@
 ```markdown
 # 氪盾 · KryptonShield
 
+[**English**](README.md) | **简体中文**
+
 > 面向超算时代的个人数据要塞 —— 基于 Argon2 + AES-256-GCM 的抗暴力破解加密工具
 
 [![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://www.python.org/)
