@@ -1,0 +1,365 @@
+以下是您提供的加密工具源代码的完整英文版本，所有注释、文档字符串、交互提示与错误信息均已翻译为英文：
+
+```python
+"""
+================================================================================
+                        High-Security File/Folder Encryption Tool (Python)
+================================================================================
+Version: 2.0
+Author: Assistant
+Description:
+    This program implements a file/folder encryption tool capable of resisting
+    brute-force attacks from ordinary supercomputers.
+    It employs industry-recognized strong encryption schemes:
+        - Key Derivation: Argon2id (memory-hard algorithm, significantly raises
+          the cost of GPU/ASIC cracking)
+        - Symmetric Encryption: AES-256-GCM (provides confidentiality,
+          integrity, and authentication)
+
+Core Security Features:
+    1. Argon2 Memory-Hard Computation: Each encryption/decryption operation
+       consumes a substantial amount of memory (default 512MB), making
+       large-scale parallel cracking with low-cost hardware infeasible.
+    2. AES-256-GCM Authenticated Encryption: Not only encrypts data but also
+       detects any tampering, preventing ciphertext modification.
+    3. Random Salt: Each encrypted file uses an independent 16-byte random
+       salt to thwart rainbow table attacks.
+    4. Random Nonce: Each encryption operation uses an independent 12-byte
+       random nonce, ensuring identical plaintext produces different
+       ciphertext each time.
+
+Feature List:
+    - Encrypt a single file
+    - Decrypt a single file
+    - Encrypt an entire folder (automatically packaged into ZIP before encryption)
+
+Prerequisites:
+    - Python 3.7+
+    - Install dependencies: pip install argon2-cffi pycryptodome
+
+Usage Example:
+    python secure_encrypt.py
+    Then follow the interactive prompts to select an operation and provide
+    the password and path.
+
+Security Warning:
+    - Remember your password! Once lost, the data will be permanently
+      unrecoverable.
+    - It is recommended to store the password in a secure offline password
+      manager.
+    - This tool is intended for lawful use only; users must comply with local
+      laws and regulations.
+
+================================================================================
+"""
+
+import os
+import sys
+import shutil
+import tempfile
+import getpass
+import secrets
+import hashlib
+from base64 import b64encode, b64decode
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError, VerificationError
+from Crypto.Cipher import AES
+
+# --- Configuration Parameters (Adjustable for Security Requirements) ---
+# AES-256 key length (32 bytes = 256 bits)
+KEY_LENGTH = 32
+# Argon2 parameters (increasing improves security but slows down encryption/decryption)
+ARGON2_TIME_COST = 4          # Number of iterations
+ARGON2_MEMORY_COST = 512 * 1024 # Memory cost (512 MB), key anti-cracking parameter
+ARGON2_PARALLELISM = 2        # Degree of parallelism
+ARGON2_HASH_LEN = 32          # Output hash length
+ARGON2_SALT_LEN = 16          # Salt length
+
+# Initialize Argon2 PasswordHasher
+ph = PasswordHasher(
+    time_cost=ARGON2_TIME_COST,
+    memory_cost=ARGON2_MEMORY_COST,
+    parallelism=ARGON2_PARALLELISM,
+    hash_len=ARGON2_HASH_LEN,
+    salt_len=ARGON2_SALT_LEN
+)
+
+# --- Key Derivation Function (Core Anti-Brute-Force Component) ---
+def derive_key_from_password(password: str, salt: bytes = None) -> tuple[bytes, bytes]:
+    """
+    Derives a secure AES-256 key from the user password using Argon2id.
+
+    Parameters:
+        password: The password string provided by the user
+        salt:     Salt (bytes). If None, a new random salt is generated
+
+    Returns:
+        (derived_key, salt): The derived 32-byte key and the salt used
+    """
+    if salt is None:
+        salt = secrets.token_bytes(ARGON2_SALT_LEN)
+
+    password_bytes = password.encode('utf-8')
+
+    # Argon2 hash computation (this step is memory- and time-intensive,
+    # crucial for anti-cracking)
+    derived_hash = ph.hash(password_bytes, salt=salt)
+
+    # Perform SHA256 second hash on the Argon2 output string to ensure key
+    # length is exactly 32 bytes
+    aes_key = hashlib.sha256(derived_hash.encode('utf-8')).digest()
+
+    return aes_key, salt
+
+# --- AES-256-GCM Encryption and Decryption ---
+def encrypt_data(data: bytes, password: str) -> bytes:
+    """
+    Encrypts data using AES-256-GCM.
+
+    Encrypted data structure:
+        salt (16B) + nonce (12B) + tag (16B) + ciphertext
+
+    Returns:
+        Complete encrypted data block (bytes)
+    """
+    salt = secrets.token_bytes(ARGON2_SALT_LEN)
+    key, _ = derive_key_from_password(password, salt)
+
+    nonce = secrets.token_bytes(12)  # GCM recommended 12 bytes
+    cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
+
+    ciphertext, tag = cipher.encrypt_and_digest(data)
+
+    # Concatenate all necessary components
+    return salt + nonce + tag + ciphertext
+
+def decrypt_data(encrypted_blob: bytes, password: str) -> bytes:
+    """
+    Decrypts a data block generated by encrypt_data.
+
+    Parameters:
+        encrypted_blob: Encrypted data containing salt+nonce+tag+ciphertext
+        password:       Decryption password
+
+    Returns:
+        Decrypted original data (bytes)
+
+    Raises:
+        ValueError: If the password is incorrect or the data is corrupted
+    """
+    if len(encrypted_blob) < ARGON2_SALT_LEN + 12 + 16:
+        raise ValueError("Encrypted data format is invalid or corrupted")
+
+    salt = encrypted_blob[:ARGON2_SALT_LEN]
+    nonce = encrypted_blob[ARGON2_SALT_LEN:ARGON2_SALT_LEN+12]
+    tag = encrypted_blob[ARGON2_SALT_LEN+12:ARGON2_SALT_LEN+12+16]
+    ciphertext = encrypted_blob[ARGON2_SALT_LEN+12+16:]
+
+    key, _ = derive_key_from_password(password, salt)
+    cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
+
+    try:
+        plaintext = cipher.decrypt_and_verify(ciphertext, tag)
+        return plaintext
+    except ValueError as e:
+        raise ValueError("Decryption failed: Incorrect password or data has been tampered with.") from e
+
+# --- File Operation Helper Functions ---
+def encrypt_file(filepath: str, password: str, output_path: str = None) -> str:
+    """
+    Encrypts a single file.
+
+    Returns:
+        Path where the encrypted file is saved
+    """
+    with open(filepath, 'rb') as f:
+        data = f.read()
+
+    encrypted_data = encrypt_data(data, password)
+
+    if output_path is None:
+        output_path = filepath + '.enc'
+
+    with open(output_path, 'wb') as f:
+        f.write(encrypted_data)
+
+    return output_path
+
+def decrypt_file(filepath: str, password: str, output_path: str = None) -> str:
+    """
+    Decrypts a single file. If the decrypted data is a ZIP archive, prompts
+    the user whether to extract it as a folder.
+
+    Returns:
+        Path to the decrypted file/folder
+    """
+    with open(filepath, 'rb') as f:
+        encrypted_data = f.read()
+
+    decrypted_data = decrypt_data(encrypted_data, password)
+
+    # If no output path is specified, generate one intelligently
+    if output_path is None:
+        if filepath.endswith('.enc'):
+            base = filepath[:-4]
+        else:
+            base = filepath + '.dec'
+        output_path = base
+
+    # Write the decrypted data
+    with open(output_path, 'wb') as f:
+        f.write(decrypted_data)
+
+    # Check if the decrypted data is a ZIP file (format used for folder encryption)
+    if decrypted_data[:2] == b'PK':
+        print(f"Detected that the decrypted file is a ZIP archive: {output_path}")
+        ans = input("Extract to a folder? (y/n): ").strip().lower()
+        if ans == 'y':
+            extract_dir = input("Enter target extraction directory (press Enter to use the filename): ").strip()
+            if not extract_dir:
+                extract_dir = os.path.splitext(output_path)[0]
+            # Extract ZIP
+            import zipfile
+            with zipfile.ZipFile(output_path, 'r') as zf:
+                zf.extractall(extract_dir)
+            print(f"Extracted to folder: {extract_dir}")
+            # Optional: delete the temporary ZIP file
+            del_zip = input("Delete the decrypted ZIP file? (y/n): ").strip().lower()
+            if del_zip == 'y':
+                os.remove(output_path)
+                print(f"Deleted: {output_path}")
+            return extract_dir
+
+    return output_path
+
+def encrypt_folder(folder_path: str, password: str, output_path: str = None) -> str:
+    """
+    Encrypts an entire folder: first packages it as a ZIP, then encrypts the ZIP file.
+
+    Parameters:
+        folder_path: Path to the folder to encrypt
+        password:    Encryption password
+        output_path: Path to save the encrypted file. By default, generates
+                     [folder_name].zip.enc in the same directory as the folder.
+
+    Returns:
+        Path where the encrypted file is saved
+    """
+    if not os.path.isdir(folder_path):
+        raise ValueError(f"Path is not a folder: {folder_path}")
+
+    folder_name = os.path.basename(os.path.normpath(folder_path))
+
+    # Create a ZIP archive in a temporary directory
+    with tempfile.TemporaryDirectory() as tmpdir:
+        zip_basename = folder_name
+        zip_path = os.path.join(tmpdir, zip_basename)
+        # shutil.make_archive automatically appends the extension; we provide the path without extension
+        created_zip = shutil.make_archive(zip_path, 'zip', folder_path)
+
+        # Read the ZIP file contents
+        with open(created_zip, 'rb') as f:
+            zip_data = f.read()
+
+    # Encrypt the ZIP data
+    encrypted_data = encrypt_data(zip_data, password)
+
+    if output_path is None:
+        output_path = os.path.join(os.path.dirname(folder_path), folder_name + '.zip.enc')
+
+    with open(output_path, 'wb') as f:
+        f.write(encrypted_data)
+
+    return output_path
+
+# --- Command-Line Interactive Main Program ---
+def main():
+    print("=" * 70)
+    print("          High-Security File/Folder Encryption Tool (Argon2 + AES-256-GCM)")
+    print("=" * 70)
+    print("Please select an operation:")
+    print("  1. Encrypt a single file")
+    print("  2. Decrypt a file (auto-detect and extract folder)")
+    print("  3. Encrypt an entire folder (automatically package as ZIP)")
+    print("=" * 70)
+
+    choice = input("Enter option (1/2/3): ").strip()
+
+    # --- Encrypt File ---
+    if choice == '1':
+        filepath = input("Enter the path of the file to encrypt: ").strip()
+        if not os.path.isfile(filepath):
+            print(f"Error: File does not exist - {filepath}")
+            sys.exit(1)
+
+        password = getpass.getpass("Enter encryption password: ")
+        password_confirm = getpass.getpass("Re-enter encryption password: ")
+        if password != password_confirm:
+            print("Error: Passwords do not match.")
+            sys.exit(1)
+
+        output = input("Output path for encrypted file (press Enter to append .enc suffix): ").strip()
+        if not output:
+            output = None
+
+        try:
+            result = encrypt_file(filepath, password, output)
+            print(f"\n✅ File encrypted successfully! Saved to: {result}")
+        except Exception as e:
+            print(f"\n❌ Encryption failed: {e}")
+            sys.exit(1)
+
+    # --- Decrypt File ---
+    elif choice == '2':
+        filepath = input("Enter the path of the file to decrypt: ").strip()
+        if not os.path.isfile(filepath):
+            print(f"Error: File does not exist - {filepath}")
+            sys.exit(1)
+
+        password = getpass.getpass("Enter decryption password: ")
+
+        output = input("Output path for decrypted file (press Enter for auto-handling): ").strip()
+        if not output:
+            output = None
+
+        try:
+            result = decrypt_file(filepath, password, output)
+            print(f"\n✅ Decryption successful! Result located at: {result}")
+        except ValueError as e:
+            print(f"\n❌ Decryption failed: {e}")
+            sys.exit(1)
+        except Exception as e:
+            print(f"\n❌ An unknown error occurred: {e}")
+            sys.exit(1)
+
+    # --- Encrypt Folder ---
+    elif choice == '3':
+        folderpath = input("Enter the path of the folder to encrypt: ").strip()
+        if not os.path.isdir(folderpath):
+            print(f"Error: Folder does not exist - {folderpath}")
+            sys.exit(1)
+
+        password = getpass.getpass("Enter encryption password: ")
+        password_confirm = getpass.getpass("Re-enter encryption password: ")
+        if password != password_confirm:
+            print("Error: Passwords do not match.")
+            sys.exit(1)
+
+        output = input("Output path for encrypted file (press Enter to generate [folder_name].zip.enc): ").strip()
+        if not output:
+            output = None
+
+        try:
+            result = encrypt_folder(folderpath, password, output)
+            print(f"\n✅ Folder encrypted successfully! Saved to: {result}")
+        except Exception as e:
+            print(f"\n❌ Encryption failed: {e}")
+            sys.exit(1)
+
+    else:
+        print("Invalid option. Please enter 1, 2, or 3.")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
+```
