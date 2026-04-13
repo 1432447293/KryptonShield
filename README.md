@@ -1,5 +1,3 @@
-以下是 **KryptonShield** 的英文版 Markdown 文档，内容与中文版完全对应：
-
 ```markdown
 # KryptonShield
 
@@ -48,12 +46,12 @@ Argon2 is the winner of the 2015 Password Hashing Competition (PHC) and is widel
 
 The internal binary layout of every encrypted file (`.enc` / `.zip.enc`) is as follows:
 
-```
+
 +----------------+----------------+----------------+----------------------+
 |      Salt      |     Nonce      |      Tag       |      Ciphertext      |
 |   (16 bytes)   |   (12 bytes)   |   (16 bytes)   |      (Variable)      |
 +----------------+----------------+----------------+----------------------+
-```
+
 
 - **Salt**: Random salt used for Argon2 key derivation.
 - **Nonce**: Initialization vector for AES-GCM, randomly generated per encryption.
