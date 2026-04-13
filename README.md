@@ -105,12 +105,12 @@ pip install argon2-cffi pycryptodome
 
 ### Download Source Code
 
-Download `kryptonshield.py` to your local machine, or copy the code directly.
+Download `secure_encrypt.py` to your local machine, or copy the code directly.
 
 ### Run the Program
 
 ```bash
-python kryptonshield.py
+python secure_encrypt.py
 ```
 
 Upon execution, an interactive menu will appear:
