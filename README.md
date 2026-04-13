@@ -231,7 +231,6 @@ This project is licensed under the [MIT License](LICENSE). You are free to use, 
 For questions, suggestions, or security vulnerability reports, please contact:
 
 - Submit a [GitHub Issue](https://github.com/1432447293/KryptonShield/issues)
-- Email `security@example.com` (PGP encryption preferred)
 
 ---
 
