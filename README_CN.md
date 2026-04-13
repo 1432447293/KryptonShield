@@ -231,7 +231,7 @@ ARGON2_SALT_LEN = 16
 如有问题、建议或安全漏洞报告，请通过以下方式联系：
 
 - 提交 [GitHub Issue](https://github.com/1432447293/KryptonShield/issues)
-- 发送邮件至 `security@example.com`（建议使用 PGP 加密）
+
 
 ---
 
