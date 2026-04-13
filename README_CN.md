@@ -1,7 +1,7 @@
 ```markdown
 # 氪盾 · KryptonShield
+[**English**](https://github.com/1432447293/KryptonShield/edit/main/README.md) | **简体中文**
 
-[**English**](README.md) | **简体中文**
 
 > 面向超算时代的个人数据要塞 —— 基于 Argon2 + AES-256-GCM 的抗暴力破解加密工具
 
